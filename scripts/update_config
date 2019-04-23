@@ -1,0 +1,15 @@
+#!/usr/local/bin/bash
+
+ARG1=$1
+if [ $# -ne 1 ] || [[ ! $ARG1 =~ ^(prod|dev)$ ]]; then
+  echo "usage: ./deploy [prod|dev]"
+  exit 1
+fi
+
+stage=$ARG1
+Stage="${ARG1[@]^}"
+echo stage: $stage
+
+. ./.env.$ARG1
+
+aws s3 cp ./config.${stage}.yaml s3://$ConfigBucket/$ConfigKey --profile $AWSProfile

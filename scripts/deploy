@@ -1,0 +1,47 @@
+#!/usr/local/bin/bash
+
+ARG1=$1
+if [ $# -ne 1 ] || [[ ! $ARG1 =~ ^(prod|dev)$ ]]; then
+  echo "usage: ./deploy [prod|dev]"
+  exit 1
+fi
+
+stage=$ARG1
+Stage="${ARG1[@]^}"
+echo stage: $stage
+
+. ./.env.$ARG1
+
+layers=(
+  "dependencies"
+)
+
+for layer in ${layers[@]}; do
+  echo pip install $layer
+  mkdir -p src/layers/$layer/
+  pushd src/layers/$layer/
+  docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
+  popd
+done
+
+
+
+sam build --use-container
+
+sam package --output-template-file packaged.yaml \
+  --s3-bucket $S3Bucket \
+  --s3-prefix $S3KeyPrefix \
+  --profile $AWSProfile
+
+sam deploy --template-file packaged.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --stack-name ${Stage}Monita \
+  --profile $AWSProfile \
+  --parameter-overrides \
+    "Schedule=$Schedule" \
+    "ConfigBucket=$ConfigBucket" \
+    "ConfigKey=$ConfigKey" \
+    "NotificationTargetTopicArn=$NotificationTargetTopicArn" \
+    "LogRetentionInDays=$LogRetentionInDays" \
+    "RSSTopicArn=$RSSTopicArn" \
+    "RSSSchedule=$RSSSchedule"

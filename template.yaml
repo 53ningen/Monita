@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    Monita: Tools for Monitoring Website Changes
+
+Globals:
+  Function:
+    Timeout: 15
+    Runtime: python3.7
+    MemorySize: 128
+    Handler: app.lambda_handler
+
+Parameters:
+  ConfigBucket:
+    Type: String
+  ConfigKey:
+    Type: String
+  LogRetentionInDays:
+    Type: Number
+    Default: 7
+  RSSTopicArn:
+    Type: String
+  RSSSchedule:
+    Type: String
+    Default: "rate(60 minutes)"
+
+Resources:
+  LambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - sns:Publish
+            Effect: Allow
+            Resource:
+            - !Ref RSSTopicArn
+          Version: '2012-10-17'
+        PolicyName: SNSTopicsPublish
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - s3:GetObject
+            - s3:PutObject
+            Effect: Allow
+            Resource:
+            - !Join ['', ['arn:aws:s3:::', !Ref MonitaBucket, '/*']]
+            - !Sub arn:aws:s3:::${ConfigBucket}/${ConfigKey}
+          Version: '2012-10-17'
+        PolicyName: GetPutS3Object
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - s3:ListBucket
+            Effect: Allow
+            Resource:
+            - !Join ['', ['arn:aws:s3:::', !Ref MonitaBucket]]
+          Version: '2012-10-17'
+        PolicyName: ListBucket
+
+  MonitaBucket:
+    Type: AWS::S3::Bucket
+
+  DependenciesLayer:
+      Type: AWS::Serverless::LayerVersion
+      Properties:
+        Description: layer for Monita
+        ContentUri: src/layers/dependencies
+        RetentionPolicy: Retain
+        CompatibleRuntimes:
+          - python3.6
+          - python3.7
+
+  CollectRSSEntriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/collect_rss_entries
+      Role: !GetAtt LambdaFunctionRole.Arn
+      Layers:
+        - !Ref DependenciesLayer
+      Environment:
+        Variables:
+          ConfigBucket: !Sub ${ConfigBucket}
+          ConfigKeyName: !Sub ${ConfigKey}
+          MonitaBucket: !Ref MonitaBucket
+          TopicArn: !Sub ${RSSTopicArn}
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Sub ${RSSSchedule}
+
+  CollectRSSEntriesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+        LogGroupName:
+          !Join
+            - ''
+            - - '/aws/lambda/'
+              - !Ref CollectRSSEntriesFunction
+        RetentionInDays: !Sub ${LogRetentionInDays}

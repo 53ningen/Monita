@@ -1,0 +1,11 @@
+---
+
+globals:
+  log_level: INFO
+functions:
+  collect_rss_entries:
+    items:
+      -
+        url: https://ameblo.jp/wakeupgirls/rss.html
+        count: 3
+        id_prefix: wug

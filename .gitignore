@@ -1,0 +1,16 @@
+.aws-sam
+packaged.yaml
+
+src/*/layers/*/*
+
+!src/*/layers/*/requirements.txt
+!src/*/layers/*/__init__.py
+
+.env.*
+!.env.template
+
+src/layers/**/*
+!src/layers/**/requirements.txt
+
+config.dev.yaml
+config.prod.yaml
