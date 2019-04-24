@@ -16,6 +16,7 @@ layers=(
   "dependencies"
 )
 
+
 for layer in ${layers[@]}; do
   echo pip install $layer
   mkdir -p src/layers/$layer/
@@ -23,8 +24,6 @@ for layer in ${layers[@]}; do
   docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
   popd
 done
-
-
 
 sam build --use-container
 
@@ -44,4 +43,6 @@ sam deploy --template-file packaged.yaml \
     "NotificationTargetTopicArn=$NotificationTargetTopicArn" \
     "LogRetentionInDays=$LogRetentionInDays" \
     "RSSTopicArn=$RSSTopicArn" \
-    "RSSSchedule=$RSSSchedule"
+    "WebsiteTopicArn=$WebsiteTopicArn" \
+    "RSSSchedule=$RSSSchedule" \
+    "WebsiteSchedule=$WebsiteSchedule"
