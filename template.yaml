@@ -88,6 +88,16 @@ Resources:
         CompatibleRuntimes:
           - python3.6
           - python3.7
+  SharedLayer:
+      Type: AWS::Serverless::LayerVersion
+      Properties:
+        Description: shared files for Monita
+        ContentUri: src/layers/shared
+        RetentionPolicy: Retain
+        CompatibleRuntimes:
+          - python3.6
+          - python3.7
+
 
   CollectRSSEntriesFunction:
     Type: AWS::Serverless::Function
@@ -96,6 +106,7 @@ Resources:
       Role: !GetAtt LambdaFunctionRole.Arn
       Layers:
         - !Ref DependenciesLayer
+        - !Ref SharedLayer
       Environment:
         Variables:
           ConfigBucket: !Sub ${ConfigBucket}
@@ -125,6 +136,7 @@ Resources:
       Role: !GetAtt LambdaFunctionRole.Arn
       Layers:
         - !Ref DependenciesLayer
+        - !Ref SharedLayer
       Environment:
         Variables:
           ConfigBucket: !Sub ${ConfigBucket}

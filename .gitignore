@@ -9,8 +9,8 @@ src/*/layers/*/*
 .env.*
 !.env.template
 
-src/layers/**/*
-!src/layers/**/requirements.txt
+src/layers/dependencies/*
+!src/layers/dependencies/requirements.txt
 
 config.dev.yaml
 config.prod.yaml
