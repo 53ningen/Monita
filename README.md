@@ -1,7 +1,8 @@
 Monita
 ======
 
-Tools for Monitoring Website Changes
+Serverless Tools for Monitoring Website Changes
+
 
 # What is Monita?
 ## Detect website changes
@@ -69,7 +70,28 @@ The message notified to the configured SNS topic is as follows:
 }
 ```
 
-## Configuration
+
+## Detect New Entry of RSS Feed
+
+When the new entry of RSS feed posted, this app send a message to the configured SNS topic.
+
+The configuration file: config.template.yaml is as follows:
+
+```yaml
+---
+
+globals:
+  log_level: INFO
+functions:
+  collect_rss_entries:
+    items:
+      -
+        url: https://ameblo.jp/wakeupgirls/rss.html
+        id_prefix: wug
+```
+
+
+# Configuration
 
 1. `cp ./config.template.yaml config.dev.yaml`. (or `config.prod.yaml`)
 2. Update `config.dev.yaml`
@@ -93,9 +115,20 @@ functions:
         title: example page         # [option] used for the title of messages sent to SNS topic
 ```
 
-## Deployment
+
+# Deployment
 
 1. `cp ./.env.template .env.dev`. (or `.env.prod`)
 2. Update `.env.dev`
 3. `./script/update_config dev`
 4. `./script/deploy dev`
+
+
+# Resources
+
+This app will create following resources:
+
+- Lambda Functions
+- CloudWatch Logs, Log Group
+- S3 Bucket
+- IAM Role
