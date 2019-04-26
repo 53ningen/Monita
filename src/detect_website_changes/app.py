@@ -5,13 +5,14 @@ import json
 import yaml
 import boto3
 import datetime
+import traceback
 
 import website
 import log
 import cache
 import hashlib
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 logger = None
 
@@ -44,6 +45,36 @@ def load_config_file():
     f.close()
     return dict
 
+def create_obj(object_key, url, hash, title, text, time) -> dict:
+    return {
+      'id': object_key,
+      'title': title,
+      'title_detail': {
+        'type': 'text/plain',
+        'language': 'ja',
+        'base': url,
+        'value': title
+      },
+      'links': [
+        {
+          'rel': 'alternate',
+          'type': 'text/html',
+          'href': url
+        }
+      ],
+      'link': 'https://ameblo.jp/rungirlsrun/entry-12457039783.html',
+      'hash': hash,
+      'summary': text,
+      'summary_detail': {
+        'type': 'text/html',
+        'language': 'ja',
+        'base': url,
+        'value': text
+      },
+      'updated': time.isoformat(),
+      'updated_parsed': list(time.timetuple())
+    }
+
 def check_if_website_updated(item) -> bool:
     res = requests.get(item.get_url())
     logger.debug(json.dumps({'url':item.get_url(), 'status_code': res.status_code}))
@@ -51,19 +82,17 @@ def check_if_website_updated(item) -> bool:
         logger.error('Error: ' + item.get_url())
         return False
     soup = BeautifulSoup(res.text, "html.parser")
-    selected = soup.select_one('#contents')
+    [s.decompose() for s in soup('style')]
+    [s.decompose() for s in soup('script')]
+    [s.decompose() for s in soup if isinstance(s, Comment)]
+    title = item.get_title() or soup.select_one('title').text
+    selected = soup.select_one(item.get_selector())
     if not selected:
         logger.error('Error: soup.select(...) is None')
 
+    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc,microsecond=0)
     hash = hashlib.md5(selected.text.encode()).hexdigest()
-    obj = {
-        'id': item.get_object_key(),
-        'url': item.get_url(),
-        'selector': item.get_selector(),
-        'hash': hash,
-        'text': selected.text
-    }
-
+    obj = create_obj(item.get_object_key(), item.get_url(), hash, title, selected.text, now)
     cache = in_memory_cache.get(item.get_object_key())
     if cache and cache.get('hash') == hash:
         logger.debug('local cache hit for: ' + item.get_url())
@@ -85,9 +114,15 @@ def lambda_handler(event, context):
     logger = log.get_logger(dict['globals']['log_level'])
 
     changed = 0
+    error = 0
     for item in website_config.get_items():
-        website_changed = check_if_website_updated(item)
-        if website_changed: changed += 1
+        try:
+            website_changed = check_if_website_updated(item)
+            if website_changed: changed += 1
+        except:
+            print(traceback.format_exc())
+            error += 1
     return {
-        'changed': changed
+        'changed': changed,
+        'error': error
     }

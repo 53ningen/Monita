@@ -19,10 +19,11 @@ class WebsiteConfig:
 
 
 class WebsiteConfigItem:
-    def __init__(self, url, selector, id_prefix):
+    def __init__(self, url, selector, id_prefix, title):
         self._url = url
         self._selector = selector
         self._id_prefix = id_prefix
+        self._title = title
 
     @staticmethod
     def of(dict):
@@ -30,7 +31,8 @@ class WebsiteConfigItem:
             url = dict['url']
             selector = dict.get('selector')
             id_prefix = dict.get('id_prefix') or ''
-            return WebsiteConfigItem(url, selector, id_prefix)
+            title = dict.get('title') or None
+            return WebsiteConfigItem(url, selector, id_prefix, title)
         except KeyError:
             return None
 
@@ -43,3 +45,6 @@ class WebsiteConfigItem:
     def get_object_key(self) -> str:
         res = urlparse(self._url)
         return res.netloc + res.path + res.query
+
+    def get_title(self) -> str:
+        return self._title
