@@ -1,11 +1,11 @@
 Monita
 ======
 
-Serverless Tools for Monitoring Website Changes
+Serverless App for Monitoring Website Changes
 
 
 # What is Monita?
-## Detect website changes
+## Detect Website Changes
 
 When the content of webpage written in config file updated, this app send a message to the configured SNS topic.
 
