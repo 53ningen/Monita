@@ -62,7 +62,7 @@ def create_obj(object_key, url, hash, title, text, time) -> dict:
           'href': url
         }
       ],
-      'link': 'https://ameblo.jp/rungirlsrun/entry-12457039783.html',
+      'link': url,
       'hash': hash,
       'summary': text,
       'summary_detail': {
