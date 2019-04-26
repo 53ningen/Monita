@@ -7,7 +7,6 @@ functions:
     items:
       -
         url: https://ameblo.jp/wakeupgirls/rss.html
-        count: 3
         id_prefix: wug
   detect_website_changes:
     items:

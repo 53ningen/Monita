@@ -36,7 +36,7 @@ def notify(item, topic):
 
 def handle_entries(entries, rss_config_item, topic) -> int:
     new_entry = 0
-    for entry in entries[:rss_config_item.get_count()]:
+    for entry in entries:
         try:
             id = rss_config_item.generate_id(entry.id)
             if in_memory_cache.get(id):
