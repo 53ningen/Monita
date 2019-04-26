@@ -78,6 +78,9 @@ Resources:
 
   MonitaBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
 
   DependenciesLayer:
       Type: AWS::Serverless::LayerVersion
