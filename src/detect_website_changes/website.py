@@ -3,20 +3,24 @@
 from urllib.parse import urlparse
 
 class WebsiteConfig:
-    def __init__(self, items):
+    def __init__(self, items, format):
         self._items = items
+        self._format = format
 
     @staticmethod
     def of(dict):
         try:
             items = [WebsiteConfigItem.of(i) for i in dict['items']]
-            return WebsiteConfig(items)
+            format = dict['format']
+            return WebsiteConfig(items, format)
         except KeyError:
             return None
 
     def get_items(self):
         return self._items
 
+    def get_format(self):
+        return self._format
 
 class WebsiteConfigItem:
     def __init__(self, url, selector, id_prefix, title):

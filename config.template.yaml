@@ -9,6 +9,35 @@ functions:
         url: https://ameblo.jp/wakeupgirls/rss.html
         id_prefix: wug
   detect_website_changes:
+    format: >
+      {
+        "id": "${object_key}",
+        "title": "${title}",
+        "title_detail": {
+          type": text/plain,
+          "language": "ja",
+          "base": "${url}",
+          "value": "${title}"
+        },
+        "links": [
+          {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "${url}"
+          }
+        ],
+        "link": "${url}",
+        "hash": "${hash}",
+        "summary": "${text}",
+        "summary_detail": {
+          "type": "text/html",
+          "language": "ja",
+          "base": "${url}",
+          "value": "${text}"
+        },
+        "updated": "${iso8601time}",
+        "updated_parsed": "${timetuple}"
+      }    
     items:
       -
         url: https://ameblo.jp/wakeupgirls/rss.html

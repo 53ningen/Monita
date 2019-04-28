@@ -3,6 +3,7 @@
 import os
 import json
 import boto3
+import string
 import datetime
 import traceback
 import hashlib
@@ -27,37 +28,26 @@ s3_cache = cache.S3Cache(boto3.resource('s3').Bucket(monita_bucket), 'data/websi
 snscli = boto3.client('sns')
 config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
-def create_obj(object_key, url, hash, title, text, time) -> dict:
+def create_message(format, object_key, url, hash, title, text, time) -> str:
+    template = string.Template(format)
+    return template.substitute({
+        'object_key': object_key,
+        'url': url,
+        'hash': hash,
+        'title': title,
+        'text': json.dumps(text, ensure_ascii=False),
+        'iso8601time': time.isoformat(),
+        'timetuple': str(list(time.timetuple()))
+    })
+
+def create_cache_obj(object_key, hash, message) -> dict:
     return {
-      'id': object_key,
-      'title': title,
-      'title_detail': {
-        'type': 'text/plain',
-        'language': 'ja',
-        'base': url,
-        'value': title
-      },
-      'links': [
-        {
-          'rel': 'alternate',
-          'type': 'text/html',
-          'href': url
-        }
-      ],
-      'link': url,
+      'object_key': object_key,
       'hash': hash,
-      'summary': text,
-      'summary_detail': {
-        'type': 'text/html',
-        'language': 'ja',
-        'base': url,
-        'value': text
-      },
-      'updated': time.isoformat(),
-      'updated_parsed': list(time.timetuple())
+      'message': message
     }
 
-def check_if_website_updated(item) -> bool:
+def check_if_website_updated(item, format) -> bool:
     res = requests.get(item.get_url())
     logger.debug(json.dumps({'url':item.get_url(), 'status_code': res.status_code}))
     if res.status_code < 200 or res.status_code >= 300:
@@ -72,21 +62,26 @@ def check_if_website_updated(item) -> bool:
     if not selected:
         logger.error('Error: soup.select(...) is None')
 
-    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc,microsecond=0)
+    object_key = item.get_object_key()
     hash = hashlib.md5(selected.text.encode()).hexdigest()
-    obj = create_obj(item.get_object_key(), item.get_url(), hash, title, selected.text, now)
-    cache = in_memory_cache.get(item.get_object_key())
+    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc,microsecond=0)
+
+    message = create_message(format, object_key, item.get_url(), hash, title, selected.text, now)
+    logger.debug(message)
+    cache_obj = create_cache_obj(object_key, hash, message)
+
+    cache = in_memory_cache.get(object_key)
     if cache and cache.get('hash') == hash:
         logger.debug('local cache hit for: ' + item.get_url())
         return False
-    cache = s3_cache.get_dict(item.get_object_key(), logger)
+    cache = s3_cache.get_dict(object_key, logger)
     if cache and cache.get('hash') == hash:
         logger.debug('remote cache hit for: ' + item.get_url())
-        in_memory_cache.put(item.get_object_key(), obj)
+        in_memory_cache.put(object_key, cache_obj)
         return False
-    sns.notify(snscli, obj, topic, logger)
-    in_memory_cache.put(item.get_object_key(), obj)
-    s3_cache.put_dict(item.get_object_key(), obj, logger)
+    sns.notify(snscli, message, topic, logger)
+    in_memory_cache.put(object_key, cache_obj)
+    s3_cache.put_dict(object_key, cache_obj, logger)
     return True
 
 def lambda_handler(event, context):
@@ -99,7 +94,7 @@ def lambda_handler(event, context):
     error = 0
     for item in website_config.get_items():
         try:
-            website_changed = check_if_website_updated(item)
+            website_changed = check_if_website_updated(item, website_config.get_format())
             if website_changed: changed += 1
         except:
             print(traceback.format_exc())
