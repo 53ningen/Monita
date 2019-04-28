@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import boto3
 import feedparser
 
@@ -22,8 +23,14 @@ s3_cache = cache.S3Cache(boto3.resource('s3').Bucket(monita_bucket), 'data/rss/'
 snscli = boto3.client('sns')
 config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
+def create_message(format, entry) -> str:
+    if format is None:
+        return entry
+    else:
+        template = string.Template(format)
+        return template.substitute(dict(entry))
 
-def handle_entries(entries, rss_config_item, topic) -> int:
+def handle_entries(entries, rss_config_item, topic, format) -> int:
     new_entry = 0
     for entry in entries:
         try:
@@ -33,7 +40,8 @@ def handle_entries(entries, rss_config_item, topic) -> int:
             if s3_cache.get(id):
                 in_memory_cache.put(id, entry)
                 continue
-            sns.notify(snscli, entry, topic, logger)
+            message = create_message(format, entry)
+            sns.notify(snscli, json.dumps(message, ensure_ascii=False), topic, logger)
             in_memory_cache.put(id, entry)
             s3_cache.put_dict(id, entry)
             new_entry += 1
@@ -52,7 +60,7 @@ def lambda_handler(event, context):
     for rss_config_item in rss_config.get_items():
         try:
             res = feedparser.parse(rss_config_item.get_url())
-            new_entry += handle_entries(res.entries, rss_config_item, topic)
+            new_entry += handle_entries(res.entries, rss_config_item, topic, rss_config.get_format())
         except Exception as e:
             logger.error(e)
             continue

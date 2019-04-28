@@ -2,12 +2,11 @@
 
 import json
 
-def notify(snscli, item, topic, logger):
-    j = json.dumps(item, ensure_ascii=False)
-    logger.debug(j)
+def notify(snscli, message, topic, logger):
+    logger.debug(message)
     res = snscli.publish(
         TopicArn=topic,
-        Message=j,
+        Message=message,
     )
     logger.info(res)
     return res

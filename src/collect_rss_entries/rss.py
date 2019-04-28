@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 
 class RSSConfig:
-    def __init__(self, items):
+    def __init__(self, items, format):
         self._items = items
+        self._format = format
 
     @staticmethod
     def of(dict):
         try:
             items = [RSSConfigItem.of(i) for i in dict['items']]
-            return RSSConfig(items)
+            format = dict.get('format')
+            return RSSConfig(items, format)
         except KeyError:
             return None
 
     def get_items(self):
         return self._items
 
+    def get_format(self):
+        return self._format
 
 class RSSConfigItem:
     def __init__(self, url, id_prefix):
