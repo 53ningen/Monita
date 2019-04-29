@@ -9,12 +9,13 @@ functions:
         url: https://ameblo.jp/wakeupgirls/rss.html
         id_prefix: wug
   detect_website_changes:
-    format: >
+    format: |
       {
         "id": "${object_key}",
+        "type": "website_changes",
         "title": "${title}",
         "title_detail": {
-          type": text/plain,
+          "type": "text/plain",
           "language": "ja",
           "base": "${url}",
           "value": "${title}"
@@ -37,7 +38,7 @@ functions:
         },
         "updated": "${iso8601time}",
         "updated_parsed": "${timetuple}"
-      }    
+      }
     items:
       -
         url: https://ameblo.jp/wakeupgirls/rss.html

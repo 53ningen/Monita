@@ -35,9 +35,9 @@ def create_message(format, object_key, url, hash, title, text, time) -> str:
         'url': url,
         'hash': hash,
         'title': title,
-        'text': json.dumps(text, ensure_ascii=False),
+        'text': repr(text),
         'iso8601time': time.isoformat(),
-        'timetuple': str(list(time.timetuple()))
+        'timetuple': list(time.timetuple())
     })
 
 def create_cache_obj(object_key, hash, message) -> dict:
