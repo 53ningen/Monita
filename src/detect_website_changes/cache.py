@@ -15,6 +15,7 @@ class InMemoryCache:
     def get(self, id):
         return self._dict.get(id)
 
+
 class S3Cache:
     def __init__(self, s3bucket, prefix = '', use_encoded_object_key = False):
         self._bucket = s3bucket
@@ -25,7 +26,7 @@ class S3Cache:
         object_key = base64.b64encode(id.encode('utf-8')).decode() if self._use_encoded_object_key else id
         return self._prefix + object_key
 
-    def get_dict(self, id, logger = None):
+    def get_dict(self, id, logger=None):
         res = self.get(id, logger)
         return json.loads(res) if res else None
 
@@ -39,13 +40,13 @@ class S3Cache:
                 logger.error("Unexpected error: %s" % error_code)
             return None
 
-    def put_dict(self, id, dict, logger = None):
-        data = bytearray(json.dumps(dict, ensure_ascii = False).encode())
+    def put_dict(self, id, dic, logger=None):
+        data = bytearray(json.dumps(dic, ensure_ascii = False).encode())
         self.put(id, data)
 
-    def put(self, id, bin_data, logger = None):
+    def put(self, id, bin_data, logger=None):
         try:
-            res = self._bucket.Object(self._generate_object_key(id)).put(Body = bin_data)
+            res = self._bucket.Object(self._generate_object_key(id)).put(Body=bin_data)
             if logger is not None:
                 logger.debug(res)
         except ClientError as e:

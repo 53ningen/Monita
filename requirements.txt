@@ -1,0 +1,6 @@
+boto3
+botocore
+pyyaml==5.1
+requests==2.21.0
+feedparser==5.2.1
+BeautifulSoup4

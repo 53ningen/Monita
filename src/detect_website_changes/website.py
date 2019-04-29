@@ -2,17 +2,18 @@
 
 from urllib.parse import urlparse
 
+
 class WebsiteConfig:
-    def __init__(self, items, format):
+    def __init__(self, items, fmt):
         self._items = items
-        self._format = format
+        self._format = fmt
 
     @staticmethod
-    def of(dict):
+    def of(dic):
         try:
-            items = [WebsiteConfigItem.of(i) for i in dict['items']]
-            format = dict['format']
-            return WebsiteConfig(items, format)
+            items = [WebsiteConfigItem.of(i) for i in dic['items']]
+            fmt = dic['format']
+            return WebsiteConfig(items, fmt)
         except KeyError:
             return None
 
@@ -22,6 +23,7 @@ class WebsiteConfig:
     def get_format(self):
         return self._format
 
+
 class WebsiteConfigItem:
     def __init__(self, url, selector, id_prefix, title):
         self._url = url
@@ -30,12 +32,12 @@ class WebsiteConfigItem:
         self._title = title
 
     @staticmethod
-    def of(dict):
+    def of(dic):
         try:
-            url = dict['url']
-            selector = dict.get('selector')
-            id_prefix = dict.get('id_prefix') or ''
-            title = dict.get('title') or None
+            url = dic['url']
+            selector = dic.get('selector')
+            id_prefix = dic.get('id_prefix') or ''
+            title = dic.get('title') or None
             return WebsiteConfigItem(url, selector, id_prefix, title)
         except KeyError:
             return None

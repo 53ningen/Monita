@@ -25,11 +25,12 @@ topic = os.environ['TopicArn']
 in_memory_cache = cache.InMemoryCache()
 s3_cache = cache.S3Cache(boto3.resource('s3').Bucket(monita_bucket), 'data/website/')
 
-snscli = boto3.client('sns')
+sns_cli = boto3.client('sns')
 config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
-def create_message(format, object_key, url, hash, title, text, time) -> str:
-    template = string.Template(format)
+
+def create_message(fmt, object_key, url, hash, title, text, time) -> str:
+    template = string.Template(fmt)
     return template.substitute({
         'object_key': object_key,
         'url': url,
@@ -40,6 +41,7 @@ def create_message(format, object_key, url, hash, title, text, time) -> str:
         'timetuple': list(time.timetuple())
     })
 
+
 def create_cache_obj(object_key, hash, message) -> dict:
     return {
       'object_key': object_key,
@@ -47,7 +49,8 @@ def create_cache_obj(object_key, hash, message) -> dict:
       'message': message
     }
 
-def check_if_website_updated(item, format) -> bool:
+
+def check_if_website_updated(item, fmt) -> bool:
     res = requests.get(item.get_url())
     logger.debug(json.dumps({'url':item.get_url(), 'status_code': res.status_code}))
     if res.status_code < 200 or res.status_code >= 300:
@@ -66,7 +69,7 @@ def check_if_website_updated(item, format) -> bool:
     hash = hashlib.md5(selected.text.encode()).hexdigest()
     now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc,microsecond=0)
 
-    message = create_message(format, object_key, item.get_url(), hash, title, selected.text, now)
+    message = create_message(fmt, object_key, item.get_url(), hash, title, selected.text, now)
     logger.debug(message)
     cache_obj = create_cache_obj(object_key, hash, message)
 
@@ -79,16 +82,17 @@ def check_if_website_updated(item, format) -> bool:
         logger.debug('remote cache hit for: ' + item.get_url())
         in_memory_cache.put(object_key, cache_obj)
         return False
-    sns.notify(snscli, message, topic, logger)
+    sns.notify(sns_cli, message, topic, logger)
     in_memory_cache.put(object_key, cache_obj)
     s3_cache.put_dict(object_key, cache_obj, logger)
     return True
 
+
 def lambda_handler(event, context):
-    dict = config.load_config_file(config_bucket, config_key_name)
-    website_config = website.WebsiteConfig.of(dict['functions']['detect_website_changes'])
+    dic = config.load_config_file(config_bucket, config_key_name)
+    website_config = website.WebsiteConfig.of(dic['functions']['detect_website_changes'])
     global logger
-    logger = log.get_logger(dict['globals']['log_level'])
+    logger = log.get_logger(dic['globals']['log_level'])
 
     changed = 0
     error = 0

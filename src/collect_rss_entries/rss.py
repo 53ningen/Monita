@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
+
 class RSSConfig:
-    def __init__(self, items, format):
+    def __init__(self, items, fmt):
         self._items = items
-        self._format = format
+        self._format = fmt
 
     @staticmethod
-    def of(dict):
+    def of(dic):
         try:
-            items = [RSSConfigItem.of(i) for i in dict['items']]
-            format = dict.get('format')
-            return RSSConfig(items, format)
+            items = [RSSConfigItem.of(i) for i in dic['items']]
+            fmt = dic.get('format')
+            return RSSConfig(items, fmt)
         except KeyError:
             return None
 
@@ -20,16 +21,17 @@ class RSSConfig:
     def get_format(self):
         return self._format
 
+
 class RSSConfigItem:
     def __init__(self, url, id_prefix):
         self._url = url
         self._id_prefix = id_prefix
 
     @staticmethod
-    def of(dict):
+    def of(dic):
         try:
-            url = dict['url']
-            id_prefix = dict.get('id_prefix') or ''
+            url = dic['url']
+            id_prefix = dic.get('id_prefix') or ''
             return RSSConfigItem(url, id_prefix)
         except KeyError:
             return None

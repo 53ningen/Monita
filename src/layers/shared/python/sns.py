@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json
 
-def notify(snscli, message, topic, logger):
+def notify(sns_cli, message, topic, logger):
     logger.debug(message)
-    res = snscli.publish(
+    res = sns_cli.publish(
         TopicArn=topic,
         Message=message,
     )
