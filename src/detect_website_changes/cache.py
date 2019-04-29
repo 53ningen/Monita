@@ -17,7 +17,7 @@ class InMemoryCache:
 
 
 class S3Cache:
-    def __init__(self, s3bucket, prefix = '', use_encoded_object_key = False):
+    def __init__(self, s3bucket, prefix='', use_encoded_object_key=False):
         self._bucket = s3bucket
         self._prefix = prefix
         self._use_encoded_object_key = use_encoded_object_key
@@ -30,7 +30,7 @@ class S3Cache:
         res = self.get(id, logger)
         return json.loads(res) if res else None
 
-    def get(self, id, logger = None):
+    def get(self, id, logger=None):
         try:
             res = self._bucket.Object(self._generate_object_key(id)).get()
             return res['Body'].read().decode('utf-8')
@@ -41,7 +41,7 @@ class S3Cache:
             return None
 
     def put_dict(self, id, dic, logger=None):
-        data = bytearray(json.dumps(dic, ensure_ascii = False).encode())
+        data = bytearray(json.dumps(dic, ensure_ascii=False).encode())
         self.put(id, data)
 
     def put(self, id, bin_data, logger=None):

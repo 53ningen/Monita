@@ -10,7 +10,7 @@ import hashlib
 import requests
 from bs4 import BeautifulSoup, Comment
 
-import website
+from website import WebsiteConfig, WebsiteConfigItem
 import log
 import config
 import cache
@@ -29,7 +29,7 @@ sns_cli = boto3.client('sns')
 config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
 
-def create_message(fmt, object_key, url, hash, title, text, time) -> str:
+def create_message(fmt: str, object_key: str, url: str, hash: str, title: str, text: str, time: datetime) -> str:
     template = string.Template(fmt)
     return template.substitute({
         'object_key': object_key,
@@ -42,7 +42,7 @@ def create_message(fmt, object_key, url, hash, title, text, time) -> str:
     })
 
 
-def create_cache_obj(object_key, hash, message) -> dict:
+def create_cache_obj(object_key: str, hash: str, message: str) -> dict:
     return {
       'object_key': object_key,
       'hash': hash,
@@ -50,7 +50,7 @@ def create_cache_obj(object_key, hash, message) -> dict:
     }
 
 
-def check_if_website_updated(item, fmt) -> bool:
+def check_if_website_updated(item: WebsiteConfigItem, fmt: str) -> bool:
     res = requests.get(item.get_url())
     logger.debug(json.dumps({'url':item.get_url(), 'status_code': res.status_code}))
     if res.status_code < 200 or res.status_code >= 300:
@@ -67,7 +67,7 @@ def check_if_website_updated(item, fmt) -> bool:
 
     object_key = item.get_object_key()
     hash = hashlib.md5(selected.text.encode()).hexdigest()
-    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc,microsecond=0)
+    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc, microsecond=0)
 
     message = create_message(fmt, object_key, item.get_url(), hash, title, selected.text, now)
     logger.debug(message)
@@ -90,7 +90,7 @@ def check_if_website_updated(item, fmt) -> bool:
 
 def lambda_handler(event, context):
     dic = config.load_config_file(config_bucket, config_key_name)
-    website_config = website.WebsiteConfig.of(dic['functions']['detect_website_changes'])
+    website_config = WebsiteConfig.of(dic['functions']['detect_website_changes'])
     global logger
     logger = log.get_logger(dic['globals']['log_level'])
 
@@ -99,7 +99,8 @@ def lambda_handler(event, context):
     for item in website_config.get_items():
         try:
             website_changed = check_if_website_updated(item, website_config.get_format())
-            if website_changed: changed += 1
+            if website_changed:
+                changed += 1
         except:
             print(traceback.format_exc())
             error += 1

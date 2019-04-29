@@ -3,7 +3,7 @@
 import logging
 
 
-def get_logger(log_level):
+def get_logger(log_level: str):
     print('log_level: ' + log_level.upper())
     logger = logging.getLogger(__name__)
     handler = logging.StreamHandler()

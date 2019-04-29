@@ -6,7 +6,7 @@ import boto3
 import string
 import feedparser
 
-import rss
+from rss import RSSConfig, RSSConfigItem
 import log
 import cache
 import config
@@ -25,7 +25,7 @@ sns_cli = boto3.client('sns')
 config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
 
-def create_message(fmt, entry) -> str:
+def create_message(fmt: str, entry) -> str:
     if fmt is None:
         return entry
     else:
@@ -33,7 +33,7 @@ def create_message(fmt, entry) -> str:
         return template.substitute(dict(entry))
 
 
-def handle_entries(entries, rss_config_item, topic, fmt) -> int:
+def handle_entries(entries, rss_config_item: RSSConfigItem, topic: str, fmt: str) -> int:
     new_entry = 0
     for entry in entries:
         try:
@@ -56,7 +56,7 @@ def handle_entries(entries, rss_config_item, topic, fmt) -> int:
 
 def lambda_handler(event, context):
     dic = config.load_config_file(config_bucket, config_key_name)
-    rss_config = rss.RSSConfig.of(dic['functions']['collect_rss_entries'])
+    rss_config = RSSConfig.of(dic['functions']['collect_rss_entries'])
     global logger
     logger = log.get_logger(dic['globals']['log_level'])
 

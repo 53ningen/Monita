@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing import Optional, List
 from urllib.parse import urlparse
 
 
 class WebsiteConfig:
-    def __init__(self, items, fmt):
+    def __init__(self, items: List[WebsiteConfigItem], fmt: str):
         self._items = items
         self._format = fmt
 
     @staticmethod
-    def of(dic):
+    def of(dic: dict) -> Optional[WebsiteConfig]:
         try:
             items = [WebsiteConfigItem.of(i) for i in dic['items']]
             fmt = dic['format']
@@ -17,7 +19,7 @@ class WebsiteConfig:
         except KeyError:
             return None
 
-    def get_items(self):
+    def get_items(self) -> List[WebsiteConfigItem]:
         return self._items
 
     def get_format(self):
@@ -25,14 +27,14 @@ class WebsiteConfig:
 
 
 class WebsiteConfigItem:
-    def __init__(self, url, selector, id_prefix, title):
+    def __init__(self, url: str, selector: str, id_prefix: str, title: str):
         self._url = url
         self._selector = selector
         self._id_prefix = id_prefix
         self._title = title
 
     @staticmethod
-    def of(dic):
+    def of(dic: dict) -> Optional[WebsiteConfigItem]:
         try:
             url = dic['url']
             selector = dic.get('selector')
