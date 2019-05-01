@@ -5,7 +5,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 15
+    Timeout: 60
     Runtime: python3.7
     MemorySize: 128
     Handler: app.lambda_handler
