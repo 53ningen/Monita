@@ -41,4 +41,5 @@ functions:
       }
     items:
       -
-        url: https://ameblo.jp/wakeupgirls/rss.html
+        url: http://example.com
+        selector: "body"
