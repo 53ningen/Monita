@@ -1,31 +1,43 @@
 #!/usr/local/bin/bash
 
-ARG1=$1
-if [ $# -ne 1 ] || [[ ! $ARG1 =~ ^(prod|dev)$ ]]; then
-  echo "usage: ./deploy [prod|dev]"
-  exit 1
-fi
+usage_exit() {
+        echo "Usage: $0 [-f] (dev|prod)" 1>&2
+        exit 1
+}
 
-stage=$ARG1
+while getopts f OPT
+do
+    case ${OPT} in
+        f)  FLAG_F=1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+ARG1=$1
+stage=${ARG1}
 Stage="${ARG1[@]^}"
-echo stage: $stage
+echo stage: ${stage}
 
 . ./.env.$ARG1
 
-layers=(
-  "dependencies"
-)
+if [[ ${FLAG_F} = 1 ]]; then
+    layers=(
+      "dependencies"
+    )
 
 
-for layer in ${layers[@]}; do
-  echo pip install $layer
-  mkdir -p src/layers/$layer/
-  pushd src/layers/$layer/
-  docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
-  popd
-done
+    for layer in ${layers[@]}; do
+      echo pip install $layer
+      mkdir -p src/layers/$layer/
+      pushd src/layers/$layer/
+      docker run --rm -v "$PWD":/var/task -w /var/task lambci/lambda:build-python3.7 pip install -r requirements.txt -t python
+      popd
+    done
+fi
 
-sam build --use-container
+sam build
 
 sam package --output-template-file packaged.yaml \
   --s3-bucket $S3Bucket \
