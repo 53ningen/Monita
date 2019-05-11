@@ -9,8 +9,16 @@ Globals:
     Runtime: python3.7
     MemorySize: 128
     Handler: app.lambda_handler
+    Environment:
+      Variables:
+        Stage: !Sub ${Stage}
+        ConfigBucket: !Sub ${ConfigBucket}
+        ConfigKeyName: !Sub ${ConfigKey}
+        MonitaBucket: !Ref MonitaBucket
 
 Parameters:
+  Stage:
+    Type: String
   ConfigBucket:
     Type: String
   ConfigKey:
@@ -66,9 +74,6 @@ Resources:
         - !Ref SharedLayer
       Environment:
         Variables:
-          ConfigBucket: !Sub ${ConfigBucket}
-          ConfigKeyName: !Sub ${ConfigKey}
-          MonitaBucket: !Ref MonitaBucket
           TopicArn: !Sub ${RSSTopicArn}
       Policies:
         - S3CrudPolicy:
@@ -107,9 +112,6 @@ Resources:
         - !Ref SharedLayer
       Environment:
         Variables:
-          ConfigBucket: !Sub ${ConfigBucket}
-          ConfigKeyName: !Sub ${ConfigKey}
-          MonitaBucket: !Ref MonitaBucket
           TopicArn: !Sub ${WebsiteTopicArn}
       Policies:
         - S3CrudPolicy:

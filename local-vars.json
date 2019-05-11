@@ -1,0 +1,16 @@
+{
+  "CollectRSSEntriesFunction": {
+    "Stage": "local",
+    "ConfigBucket": "monita-config",
+    "ConfigKeyName": "config.yaml",
+    "MonitaBucket": "monita-cache",
+    "TopicArn": "arn:aws:sns:ap-northeast-1:123456789012:test"
+  },
+  "DetectWebsiteChangesFunction": {
+    "Stage": "local",
+    "ConfigBucket": "monita-config",
+    "ConfigKeyName": "config.yaml",
+    "MonitaBucket": "monita-cache",
+    "TopicArn": "arn:aws:sns:ap-northeast-1:123456789012:test"
+  }
+}
