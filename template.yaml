@@ -31,51 +31,6 @@ Parameters:
 
 
 Resources:
-  LambdaFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-        Version: '2012-10-17'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-      - PolicyDocument:
-          Statement:
-          - Action:
-            - sns:Publish
-            Effect: Allow
-            Resource:
-            - !Ref RSSTopicArn
-          Version: '2012-10-17'
-        PolicyName: SNSTopicsPublish
-      - PolicyDocument:
-          Statement:
-          - Action:
-            - s3:GetObject
-            - s3:PutObject
-            Effect: Allow
-            Resource:
-            - !Join ['', ['arn:aws:s3:::', !Ref MonitaBucket, '/*']]
-            - !Sub arn:aws:s3:::${ConfigBucket}/${ConfigKey}
-          Version: '2012-10-17'
-        PolicyName: GetPutS3Object
-      - PolicyDocument:
-          Statement:
-          - Action:
-            - s3:ListBucket
-            Effect: Allow
-            Resource:
-            - !Join ['', ['arn:aws:s3:::', !Ref MonitaBucket]]
-          Version: '2012-10-17'
-        PolicyName: ListBucket
-
   MonitaBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -106,7 +61,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/collect_rss_entries
-      Role: !GetAtt LambdaFunctionRole.Arn
       Layers:
         - !Ref DependenciesLayer
         - !Ref SharedLayer
@@ -116,6 +70,18 @@ Resources:
           ConfigKeyName: !Sub ${ConfigKey}
           MonitaBucket: !Ref MonitaBucket
           TopicArn: !Sub ${RSSTopicArn}
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MonitaBucket
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Sub ${RSSTopicArn}
       Events:
         Schedule:
           Type: Schedule
@@ -136,7 +102,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/detect_website_changes
-      Role: !GetAtt LambdaFunctionRole.Arn
       Layers:
         - !Ref DependenciesLayer
         - !Ref SharedLayer
@@ -146,6 +111,18 @@ Resources:
           ConfigKeyName: !Sub ${ConfigKey}
           MonitaBucket: !Ref MonitaBucket
           TopicArn: !Sub ${WebsiteTopicArn}
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MonitaBucket
+        - S3ReadPolicy:
+            BucketName: !Sub ${ConfigBucket}
+        - SNSPublishMessagePolicy:
+            TopicName:
+              !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !Sub ${WebsiteTopicArn}
       Events:
         Schedule:
           Type: Schedule
