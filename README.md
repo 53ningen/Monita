@@ -131,4 +131,24 @@ This app will create following resources:
 - Lambda Functions
 - CloudWatch Logs, Log Group
 - S3 Bucket
-- IAM Role
+
+
+# Run locally
+
+Prepare:
+
+```
+$ docker-compose up -d
+$ awslocal s3api create-bucket --bucket monita-config
+$ awslocal s3api create-bucket --bucket monita-cache
+$ awslocal s3 cp ./config.dev.yaml s3://monita-config/config.yaml
+```
+
+Invoke locally:
+
+```
+$ awslocal sns create-topic --name test --region ap-northeast-1
+$ sam local invoke DetectWebsiteChangesFunction --no-event \
+    --env-vars local-vars.json \
+    --docker-network `docker network ls | grep monita_default | awk '{print $1}'`
+```

@@ -19,11 +19,16 @@ monita_bucket = os.environ['MonitaBucket']
 topic = os.environ['TopicArn']
 
 in_memory_cache = cache.InMemoryCache()
-s3_cache = cache.S3Cache(boto3.resource('s3').Bucket(monita_bucket), 'data/rss/', True)
 
-sns_cli = boto3.client('sns')
-config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
-
+session = boto3.session.Session()
+if os.environ['Stage'] == 'local':
+    sns_cli = session.client('sns', endpoint_url='http://localstack:4575')
+    s3_cache = cache.S3Cache(session.resource('s3', endpoint_url='http://localstack:4572').Bucket(monita_bucket), 'data/rss/', True)
+    config_bucket = boto3.resource('s3', endpoint_url='http://localstack:4572').Bucket(os.environ['ConfigBucket'])
+else:
+    sns_cli = session.client('sns')
+    s3_cache = cache.S3Cache(session.resource('s3').Bucket(monita_bucket), 'data/rss/', True)
+    config_bucket = boto3.resource('s3').Bucket(os.environ['ConfigBucket'])
 
 def create_message(fmt: str, entry) -> str:
     if fmt is None:

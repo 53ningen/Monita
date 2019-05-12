@@ -49,6 +49,7 @@ sam deploy --template-file packaged.yaml \
   --stack-name ${Stage}Monita \
   --profile $AWSProfile \
   --parameter-overrides \
+    "Stage=${stage}" \
     "Schedule=$Schedule" \
     "ConfigBucket=$ConfigBucket" \
     "ConfigKey=$ConfigKey" \

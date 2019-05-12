@@ -1,5 +1,7 @@
 .idea
 .aws-sam
+.localstack
+
 packaged.yaml
 
 src/*/layers/*/*
